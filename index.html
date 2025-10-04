@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" ⚡>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,9 +10,14 @@
 <!-- Meta do Google AdSense -->
 <meta name="google-adsense-account" content="ca-pub-3403987938490863">
 
-<!-- Código do Google AdSense -->
+<!-- Código do Google AdSense tradicional -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3403987938490863"
      crossorigin="anonymous"></script>
+
+<!-- AMP: Script de anúncios automáticos -->
+<script async custom-element="amp-auto-ads"
+        src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js">
+</script>
 
 <style>
   html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#000; color:#fff; font-family:Arial, sans-serif; }
@@ -64,6 +69,10 @@
 </style>
 </head>
 <body>
+
+<!-- AMP: Anúncios automáticos -->
+<amp-auto-ads type="adsense" data-ad-client="ca-pub-3403987938490863"></amp-auto-ads>
+
 <h1>🦟 Pega Pernilongos</h1>
 <div id="score">Pontos: 0</div>
 <button id="startBtn">Iniciar Jogo</button>
@@ -88,17 +97,14 @@ window.addEventListener("resize",resizeCanvas); resizeCanvas();
 
 let mosquitoes=[]; const splats=[]; let mute=false,running=false,score=0,playerName="";
 
-// frases
 const frases=["Reflexo de águia!","Não teve chance!","Você está voando!","Pernilongo abatido!","Caçador nato!","Acertou em cheio!","Mira incrível!","Rápido demais!","Imparável!","Boa caçada!"];
 
-// ranking
 function getRanking(){return JSON.parse(localStorage.getItem("ranking")||"[]");}
 function saveRanking(r){localStorage.setItem("ranking",JSON.stringify(r));}
 function updateRankingDisplay(){const list=document.getElementById("rankingList");list.innerHTML="";getRanking().forEach(r=>{const li=document.createElement("li");li.textContent=`${r.name}: ${r.points}`;list.appendChild(li);});}
 function addScore(name,points){let ranking=getRanking();ranking.push({name,points});ranking.sort((a,b)=>b.points-a.points);ranking=ranking.slice(0,5);saveRanking(ranking);updateRankingDisplay();}
 updateRankingDisplay();
 
-// mosquito
 function newMosquito(){
   const types=["zigzag","horizontal","vertical"];
   const type=types[Math.floor(Math.random()*types.length)];
@@ -111,20 +117,16 @@ ctx.beginPath();ctx.ellipse(6,-6,18,10,0.6,0,Math.PI*2);ctx.fillStyle='rgba(200,
 ctx.beginPath();ctx.arc(0,12,4,0,Math.PI*2);ctx.fillStyle='#ccc';ctx.fill();ctx.restore();}
 function createSplat(x,y){const droplets=[];for(let i=0;i<8;i++){const angle=Math.random()*Math.PI*2;const r=10+Math.random()*20;droplets.push({x:x+Math.cos(angle)*r,y:y+Math.sin(angle)*r,r:2+Math.random()*6,life:1});}splats.push({x,y,t:0,droplets});}
 
-// áudio
 let audioCtx,buzzOsc,buzzGain;
 function initAudio(){audioCtx=new (window.AudioContext||window.webkitAudioContext)();buzzOsc=audioCtx.createOscillator();buzzGain=audioCtx.createGain();buzzOsc.type='sawtooth';buzzGain.gain.setValueAtTime(0.03,audioCtx.currentTime);buzzOsc.connect(buzzGain);buzzGain.connect(audioCtx.destination);buzzOsc.start();}
 function updateBuzzFrequency(){if(!mute&&running){const freq=800+Math.sin(performance.now()/50)*30+Math.random()*50;buzzOsc.frequency.setValueAtTime(freq,audioCtx.currentTime);}else{if(audioCtx) buzzOsc.frequency.setValueAtTime(0,audioCtx.currentTime);}}
 function playHitSound(){if(mute||!running) return;const osc=audioCtx.createOscillator();const gain=audioCtx.createGain();osc.type='square';osc.frequency.setValueAtTime(150,audioCtx.currentTime);gain.gain.setValueAtTime(0.1,audioCtx.currentTime);osc.connect(gain);gain.connect(audioCtx.destination);osc.start();osc.stop(audioCtx.currentTime+0.1);}
 
-// mensagem
 function mostrarMensagem(txt){const msg=document.getElementById("mensagem");msg.textContent=txt;msg.style.display="block";msg.style.animation="none";msg.offsetHeight;msg.style.animation="fadeInOut 5s forwards";setTimeout(()=>{msg.style.display="none";},5000);}
 
-// fases
 function requiredMosquitoes(){return Math.min(1+Math.floor(score/100),10);} 
 function checkSpawn(){while(mosquitoes.length<requiredMosquitoes()){mosquitoes.push(newMosquito());}}
 
-// update
 function update(dt){if(!running) return;updateBuzzFrequency();
 mosquitoes.forEach(m=>{if(m.alive){m.t+=dt*2;
   if(m.type==="zigzag"){ m.x+=Math.cos(m.t*3)*50*dt + m.vx*dt; m.y+=Math.sin(m.t*5)*40*dt + m.vy*dt; }
@@ -140,7 +142,6 @@ let last=performance.now();
 function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;update(dt);render();requestAnimationFrame(loop);}
 requestAnimationFrame(loop);
 
-// eventos
 canvas.addEventListener('pointerdown',(e)=>{if(!running) return;const rect=canvas.getBoundingClientRect();const x=e.clientX-rect.left;const y=e.clientY-rect.top;
 mosquitoes.forEach((m)=>{if(m.alive){const dx=x-m.x,dy=y-m.y;if((dx*dx/400+dy*dy/676)<=1){createSplat(m.x,m.y);playHitSound();m.x=Math.random()*W;m.y=Math.random()*H;score++;document.getElementById("score").textContent="Pontos: "+score;if(score%10===0){const frase=frases[Math.floor(Math.random()*frases.length)];mostrarMensagem(frase);}}}});});
 
